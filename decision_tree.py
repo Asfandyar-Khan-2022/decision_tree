@@ -7,9 +7,9 @@ def entropy(y):
     return -np.sum([p * np.log2(p) for p in ps if p > 0])
 
 class Node:
-    def __init__(self, feature=None, threhold=None, left=None, right=None, *, value=None):
+    def __init__(self, feature=None, threshold=None, left=None, right=None, *, value=None):
         self.feature = feature
-        self.threhold = threhold
+        self.threshold = threshold
         self.left = left
         self.right = right
         self.value = value
@@ -30,7 +30,7 @@ class DecisionTree:
         self.n_feats = X.shape[1] if not self.n_feats else min(self.n_feats, X.shape[1])
         self.root = self._grow_tree(X, y)
 
-    def _grow_Tree(self, X, y, depth=0):
+    def _grow_tree(self, X, y, depth=0):
         n_samples, n_features = X.shape
         n_labels = len(np.unique(y))
 
@@ -58,7 +58,7 @@ class DecisionTree:
             X_column = X[:, feat_idx]
             threshholds = np.unique(X_column)
             for threshold in threshholds:
-                gain = self._informaitno_gain(y, X_column, threshold)
+                gain = self._information_gain(y, X_column, threshold)
 
                 if gain > best_gain:
                     best_gain = gain
@@ -82,6 +82,10 @@ class DecisionTree:
         child_entropy = (n_l/n) * e_l + (n_r/n) * e_r
         
         # return ig
+        ig = parent_entropy - child_entropy
+        return ig
+
+
     def _split(self, X_column, split_threh):
         left_idxs = np.argwhere(X_column <= split_threh).flatten()
         right_idxs = np.argwhere(X_column > split_threh).flatten()
@@ -90,13 +94,13 @@ class DecisionTree:
 
     def predict(self, X):
         # Traverse tree
-        return np.array([self._traverse_tree(x) for x in X])
+        return np.array([self._traverse_tree(x, self.root) for x in X])
     
     def _traverse_tree(self, x, node):
         if node.is_leaf_node():
             return node.value
         
-        if x[node.feat_idx] <= node.threhold:
+        if x[node.feature] <= node.threshold:
             return self._traverse_tree(x, node.left)
         return self._traverse_tree(x, node.right)
         
